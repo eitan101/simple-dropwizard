@@ -10,6 +10,7 @@ import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.FilterRegistration;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -30,9 +31,10 @@ public class SimpleApp extends Application<Configuration> {
     @Override
     public void run(Configuration configuration, Environment environment) {
         environment.jersey().register(new RestResource());
-        environment.servlets()
-                .addFilter("filter", MyServletFilter.class)
-                .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+
+        final FilterRegistration.Dynamic filter = environment.servlets().addFilter("filter", MyServletFilter.class);
+        filter.getInitParameters().put("param", "value");
+        filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     }
 
     @Path("/")
@@ -44,18 +46,21 @@ public class SimpleApp extends Application<Configuration> {
     }
 
     public static class MyServletFilter implements Filter {
+        String param = "default";
+
         @Override
         public void init(FilterConfig filterConfig) throws ServletException {
+            param = filterConfig.getInitParameter("param");
         }
-        
+
         @Override
         public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-            request.setAttribute("key", "world");
+            request.setAttribute("key", param);
             chain.doFilter(request, response);
         }
-        
+
         @Override
         public void destroy() {
-        }        
+        }
     }
 }
