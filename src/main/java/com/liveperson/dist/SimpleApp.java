@@ -33,7 +33,7 @@ public class SimpleApp extends Application<Configuration> {
         environment.jersey().register(new RestResource());
 
         final FilterRegistration.Dynamic filter = environment.servlets().addFilter("filter", MyServletFilter.class);
-        filter.getInitParameters().put("param", "world!");
+        filter.getInitParameters().put(ENV, "world!");
         filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     }
 
@@ -41,21 +41,21 @@ public class SimpleApp extends Application<Configuration> {
     public static class RestResource {
         @GET
         public Response root(@Context HttpServletRequest httpRequest) {
-            return Response.ok("Hello " + httpRequest.getAttribute("key")).build();
+            return Response.ok("Hello " + httpRequest.getAttribute(ENV)).build();
         }
     }
 
     public static class MyServletFilter implements Filter {
-        String param = "default";
+        String param;
 
         @Override
         public void init(FilterConfig filterConfig) throws ServletException {
-            param = filterConfig.getInitParameter("param");
+            param = filterConfig.getInitParameter(ENV);
         }
 
         @Override
         public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-            request.setAttribute("key", param);
+            request.setAttribute(ENV, param);
             chain.doFilter(request, response);
         }
 
@@ -63,4 +63,6 @@ public class SimpleApp extends Application<Configuration> {
         public void destroy() {
         }
     }
+
+    public static final String ENV = "env";
 }
