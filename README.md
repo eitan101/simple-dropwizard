@@ -1,4 +1,5 @@
 # simple-dropwizard
+Simple JAX-RS server with registered filter.
 
 ## Usage
 
@@ -7,4 +8,8 @@ mvn package
 java -jar target/dwat-1.0-SNAPSHOT.jar server
 ```
 
-Navigate to http://0.0.0.0:8080/
+In another shell:
+```sh
+curl http://0.0.0.0:8080/
+Hello World
+```
