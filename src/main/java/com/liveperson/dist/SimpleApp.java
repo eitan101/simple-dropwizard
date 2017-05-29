@@ -5,13 +5,19 @@ import io.dropwizard.Configuration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.io.IOException;
+import java.util.EnumSet;
+import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 
 public class SimpleApp extends Application<Configuration> {
     public static void main(String[] args) throws Exception {
@@ -23,22 +29,33 @@ public class SimpleApp extends Application<Configuration> {
 
     @Override
     public void run(Configuration configuration, Environment environment) {
-        environment.jersey().register(new MyJerseyRequestFilter());
         environment.jersey().register(new RestResource());
+        environment.servlets()
+                .addFilter("filter", MyServletFilter.class)
+                .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     }
 
     @Path("/")
     public static class RestResource {
         @GET
-        public Response root(@Context HttpHeaders headers) {
-            return Response.ok("Hello " + headers.getHeaderString("key")).build();
+        public Response root(@Context HttpServletRequest httpRequest) {
+            return Response.ok("Hello " + httpRequest.getAttribute("key")).build();
         }
     }
 
-    public static class MyJerseyRequestFilter implements ContainerRequestFilter {
+    public static class MyServletFilter implements Filter {
         @Override
-        public void filter(ContainerRequestContext requestContext) throws IOException {
-            requestContext.getHeaders().add("key", "World!");
+        public void init(FilterConfig filterConfig) throws ServletException {
         }
+        
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+            request.setAttribute("key", "world");
+            chain.doFilter(request, response);
+        }
+        
+        @Override
+        public void destroy() {
+        }        
     }
 }
