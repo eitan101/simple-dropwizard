@@ -33,7 +33,7 @@ public class SimpleApp extends Application<Configuration> {
         environment.jersey().register(new RestResource());
 
         final FilterRegistration.Dynamic filter = environment.servlets().addFilter("filter", MyServletFilter.class);
-        filter.getInitParameters().put("param", "value");
+        filter.getInitParameters().put("param", "world!");
         filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     }
 
